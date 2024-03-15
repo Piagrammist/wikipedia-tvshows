@@ -1,0 +1,10 @@
+.vscode
+!.vscode/settings.json
+!.vscode/extensions.json
+
+Include
+Lib
+Scripts
+pyvenv.cfg
+
+**/__pycache__/
