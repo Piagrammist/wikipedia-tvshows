@@ -8,9 +8,9 @@ def get_request(url: str, params: dict = {}, **kwargs):
         response.raise_for_status()
         return response
     except HTTPError as http_err:
-        sys.exit(f'HTTP error has occurred: {http_err}')
+        sys.exit(f'[HTTP ERR]: {http_err}')
     except Exception as err:
-        sys.exit(f'Error has occurred: {err}')
+        sys.exit(f'[ERR]: {err}')
 
 
 def get_api(params: dict, **kwargs):

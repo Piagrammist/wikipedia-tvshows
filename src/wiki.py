@@ -23,20 +23,15 @@ def find_page(query: str) -> str:
         print()
     if target != -1:
         print('Press Enter to continue... Or choose another item instead: ', end='')
-    failure = lambda: print('Please enter a number ranging from 1-8: ', end='')
     while True:
         choice = input()
-        if choice == '':
-            if target != -1:
-                break
-            else:
-                failure()
+        if choice == '' and target != -1:
+            break
+        elif choice.isnumeric() and 0 < int(choice) < 9:
+            target = int(choice) - 1
+            break
         else:
-            if choice.isnumeric() and 0 < int(choice) < 9:
-                target = int(choice) - 1
-                break
-            else:
-                failure()
+            print('Please enter a number ranging from 1-8: ', end='')
     return titles[target]
 
 
@@ -51,7 +46,7 @@ def where_it_all_begins() -> str:
             url = non_empty_input('Please enter the Wikipedia link of the show: ')
             match = re.search('^(?:https?://)?(?:\w+\.)?wikipedia\.org/wiki/(\w+_\(\w*TV_series\))(?:#.+)?$', url)
             if not match:
-                sys.exit('Wrong URL provided!')
+                sys.exit('[ERR]: Wrong URL provided!')
             page = match.group(1)
             break
     return page
@@ -70,7 +65,7 @@ def find_episodes_section_index(page: str) -> int:
             index = section['index']
             break
     if index == -1:
-        sys.exit('Episodes section not found on the wiki page!')
+        sys.exit('[ERR]: Episodes section not found on the wiki page!')
     return index
 
 
