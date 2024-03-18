@@ -1,6 +1,8 @@
-import re, os, sys
+import re, os, sys, logging
 
 INDENT = ' ' * 2
+
+logger = logging.getLogger(__name__)
 
 
 def non_empty_input(prompt: str = None):
@@ -19,7 +21,8 @@ def bool_input(prompt: str = None):
 
 def list_dirs(path: str) -> list:
     if not os.path.isdir(path):
-        sys.exit('[ERR]: Directory does not exist!')
+        logger.error('User-provided series folder does not exist!')
+        sys.exit(1)
     if not path[-1] in ['/', '\\']:
         path += os.sep
     return [item for item in os.listdir(path) if os.path.isdir(path + item)]
