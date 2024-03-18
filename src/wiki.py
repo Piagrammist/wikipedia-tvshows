@@ -44,7 +44,7 @@ def where_it_all_begins() -> str:
             break
         elif choice in ['m', 'M']:
             url = non_empty_input('Please enter the Wikipedia link of the show: ')
-            match = re.search('^(?:https?://)?(?:\w+\.)?wikipedia\.org/wiki/(\w+_\(\w*TV_series\))(?:#.+)?$', url)
+            match = re.match(r'^(?:(?:https?:)?//)?(?:\w+\.)?wikipedia\.org/wiki/(\w+_\(\w*TV_series\))(?:#.+)?$', url)
             if not match:
                 sys.exit('[ERR]: Wrong URL provided!')
             page = match.group(1)
@@ -79,7 +79,7 @@ def check_external_episodes_article(page: str):
     hatnotes = soup.find_all('div', attrs={'class': 'hatnote', 'role': 'note'})
     external_article = None
     for hatnote in hatnotes:
-        if hatnote.contents[1].name == 'a' and re.search('^List of .+ episodes$', hatnote.a.string):
+        if hatnote.contents[1].name == 'a' and re.match(r'^List of .+ episodes$', hatnote.a.string):
             external_article = hatnote.a.attrs['href'].split('/')[-1]
             break
     return external_article
@@ -131,7 +131,7 @@ def parse_episodes(page: str) -> dict:
 
 def check_results(episodes: dict):
     results = {True: 0, False: 0}
-    for _season, names in episodes.items():
+    for names in episodes.values():
         for name in names:
             results[False if name == '' else True] += 1
     print(f'Total: {results[True] + results[False]}' +

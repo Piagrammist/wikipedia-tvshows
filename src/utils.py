@@ -1,19 +1,23 @@
-import os, sys
+import re, os, sys
 
 
-def non_empty_input(prompt: str = ''):
-    if prompt != '':
-        print(prompt, end='')
+def non_empty_input(prompt: str = None):
+    prompt and print(prompt, end='')
     while True:
-        inp = input()
-        if inp != '':
+        _input = input()
+        if _input:
             break
-    return inp
+    return _input
+
+
+def bool_input(prompt: str = None):
+    prompt and print(f'{prompt} (y/n)', end='')
+    return re.match(r'^(?:Y(?:es)?)?$', input(), re.I)
 
 
 def list_dirs(path: str) -> list:
     if not os.path.isdir(path):
-        sys.exit('Directory does not exist!')
+        sys.exit('[ERR]: Directory does not exist!')
     if not path[-1] in ['/', '\\']:
         path += os.sep
     return [item for item in os.listdir(path) if os.path.isdir(path + item)]
