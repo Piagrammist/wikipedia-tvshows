@@ -90,16 +90,19 @@ def parse_episodes_table(table: bs4.Tag) -> list:
     for row in table.tbody.find_all('tr', class_='vevent'):
         column = row.find('td', class_='summary')
         name = ''
-        if column.string:   #normal
-            name = column.string
-        elif column.a:      # linked names
-            name = column.a.string
-        elif column.span:   # multi-language names
-            name = column.contents[0]
-        # elif:
-            #TODO: problem with translations (e.g. Dark, Episode 6)
-        # else:
-            #TODO: who knows...
+        try:
+            if column.string:             # normal
+                name = column.string
+            elif column.a:                # linked
+                name = column.a.string
+            elif column.span:             # bilingual
+                name = column.contents[0]
+                if name == '"':           # bilingual (translated alongside `abbr` tag)
+                    name = column.contents[1].i.string
+            else:
+                print(f'[ERR]: Could not extract name from "{column}"!')
+        except (AttributeError, KeyError) as e:
+            print(f'[ERR]: {e}')
         episodes.append(name.replace('"', '').strip())
     return episodes
 
