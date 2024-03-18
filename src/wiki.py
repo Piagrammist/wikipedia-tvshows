@@ -1,55 +1,17 @@
-import re, sys, bs4
+import re, sys, bs4, logging
 
-from utils import non_empty_input
 from request import get_api
 
-INDENT = ' ' * 2
+logger = logging.getLogger(__name__)
 
 
-def find_page(query: str) -> str:
-    titles = get_api({
+def search(query: str, limit: int = 8) -> str:
+    return get_api({
         'action': 'opensearch',
         'search': query,
-        'limit': '8',
+        'limit': str(limit),
         'format': 'json'
     }).json()[1]
-    print('Please choose the right TV show:')
-    target = -1
-    for i, title in enumerate(titles):
-        print(f'{INDENT}{i + 1}. {title}', end='')
-        if target == -1 and title.lower().find('tv series') != -1:
-            target = i
-            print(' <---', end='')
-        print()
-    if target != -1:
-        print('Press Enter to continue... Or choose another item instead: ', end='')
-    while True:
-        choice = input()
-        if choice == '' and target != -1:
-            break
-        elif choice.isnumeric() and 0 < int(choice) < 9:
-            target = int(choice) - 1
-            break
-        else:
-            print('Please enter a number ranging from 1-8: ', end='')
-    return titles[target]
-
-
-def where_it_all_begins() -> str:
-    while True:
-        choice = input('Proceed to automatic search or manual URL input? (a/m) ')
-        if choice in ['a', 'A']:
-            name = non_empty_input('Please enter the TV show name: ')
-            page = find_page(name)
-            break
-        elif choice in ['m', 'M']:
-            url = non_empty_input('Please enter the Wikipedia link of the show: ')
-            match = re.match(r'^(?:(?:https?:)?//)?(?:\w+\.)?wikipedia\.org/wiki/(\w+_\(\w*TV_series\))(?:#.+)?$', url)
-            if not match:
-                sys.exit('[ERR]: Wrong URL provided!')
-            page = match.group(1)
-            break
-    return page
 
 
 def find_episodes_section_index(page: str) -> int:
@@ -65,11 +27,12 @@ def find_episodes_section_index(page: str) -> int:
             index = section['index']
             break
     if index == -1:
-        sys.exit('[ERR]: Episodes section not found on the wiki page!')
+        logger.error('Episodes section not found on the wiki page!')
+        sys.exit(1)
     return index
 
 
-def check_external_episodes_article(page: str):
+def check_external_episodes_article(page: str) -> str | None:
     html = get_api({
         'action': 'parse',
         'page': page,
@@ -100,9 +63,9 @@ def parse_episodes_table(table: bs4.Tag) -> list:
                 if name == '"':           # bilingual (translated alongside `abbr` tag)
                     name = column.contents[1].i.string
             else:
-                print(f'[ERR]: Could not extract name from "{column}"!')
-        except (AttributeError, KeyError) as e:
-            print(f'[ERR]: {e}')
+                logger.debug(f'Unknown scenario while parsing episode name: "{column}"')
+        except (AttributeError, KeyError):
+            logger.exception('Exception while parsing episode names')
         episodes.append(name.replace('"', '').strip())
     return episodes
 
@@ -132,12 +95,11 @@ def parse_episodes(page: str) -> dict:
         else parse_internal_episode_tables(page)
 
 
-def check_results(episodes: dict):
-    results = {True: 0, False: 0}
+def check_fails(episodes: dict) -> int:
+    failed = 0
     for names in episodes.values():
         for name in names:
-            results[False if name == '' else True] += 1
-    print(f'Total: {results[True] + results[False]}' +
-          f'\n{INDENT}Success: {results[True]}' +
-          f'\n{INDENT}Fail: {results[False]}')
-    return results
+            if not name:
+                failed += 1
+    failed and logger.warning(f'Failed to retrieve {failed} episode name(s)')
+    return failed

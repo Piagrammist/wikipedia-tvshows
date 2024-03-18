@@ -1,5 +1,7 @@
 import re, os, sys
 
+INDENT = ' ' * 2
+
 
 def non_empty_input(prompt: str = None):
     prompt and print(prompt, end='')
